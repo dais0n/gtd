@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	mapset "github.com/deckarep/golang-set"
 	"github.com/urfave/cli"
 )
 
@@ -66,6 +67,18 @@ func Run(args []string) int {
 			},
 		},
 		{
+			Name:    "tags",
+			Aliases: []string{"t"},
+			Usage:   "list todo",
+			Action:  tagTodoAction,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "all, a",
+					Usage: "show all tags",
+				},
+			},
+		},
+		{
 			Name:    "done",
 			Aliases: []string{"d"},
 			Usage:   "done todo",
@@ -111,11 +124,19 @@ func listTodoAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	for i, v := range todos {
-		if v.Done {
-			fmt.Print(checkmark)
+	if c.Bool("all") {
+		for i, v := range todos {
+			if v.Done {
+				fmt.Print(checkmark)
+			}
+			fmt.Printf("%v: %v: %v \n", i, v.Title, v.Date)
 		}
-		fmt.Printf("%v: %v: %v \n", i, v.Title, v.Date)
+	} else {
+		for i, v := range todos {
+			if !v.Done {
+				fmt.Printf("%v: %v: %v \n", i, v.Title, v.Date)
+			}
+		}
 	}
 	return nil
 }
@@ -143,6 +164,39 @@ func doneTodoAction(c *cli.Context) error {
 	}
 	if err := todoWrite("/var/tmp/todo.json", todos); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func tagTodoAction(c *cli.Context) error {
+	var todos []Todo
+	todos, err := todoRead("/var/tmp/todo.json")
+	if err != nil {
+		return err
+	}
+
+	if c.Bool("all") {
+		var tags = mapset.NewSet()
+
+		for _, v := range todos {
+			if v.Tag != "" {
+				tags.Add(v.Tag)
+			}
+		}
+		for tag := range tags.Iter() {
+			fmt.Println(tag)
+		}
+		return nil
+	} else if tag := c.Args().First(); tag != "" {
+		for i, v := range todos {
+			if v.Tag == tag {
+				fmt.Printf("%v: %v: %v \n", i, v.Title, v.Date)
+			}
+		}
+	} else {
+		cli.ShowCommandHelp(c, "list")
+		return fmt.Errorf("Failed to parse options")
 	}
 
 	return nil
