@@ -15,8 +15,8 @@ import (
 var Version = "0.0.1"
 
 const (
-	todo_mark      = "\u2610 "
-	todo_done_mark = "\u2611 "
+	todoMark     = "\u2610 "
+	todoDoneMark = "\u2611 "
 )
 
 type Todo struct {
@@ -82,6 +82,12 @@ func Run(args []string) int {
 			Usage:   "done todo",
 			Action:  doneTodoAction,
 		},
+		{
+			Name:    "clean",
+			Aliases: []string{"c"},
+			Usage:   "clean done todo",
+			Action:  cleanTodoAction,
+		},
 	}
 	app.Run(os.Args)
 	return 0
@@ -90,8 +96,8 @@ func Run(args []string) int {
 func addTodoAction(c *cli.Context) error {
 	var title string
 	var tag string
-	var parent string
-	var todos []Todo
+	var parentnum string
+	var memo string
 
 	todos, err := todoRead("/var/tmp/todo.json")
 	if err != nil {
@@ -101,23 +107,22 @@ func addTodoAction(c *cli.Context) error {
 	if c.Args().Present() {
 		title = c.Args().First()
 		tag = c.String("tag")
-		parent = c.String("parent")
+		parentnum = c.String("parent")
+		memo = c.String("memo")
 	} else {
 		cli.ShowCommandHelp(c, "add")
 		return fmt.Errorf("Failed to parse options")
 	}
 
-	todo := Todo{Title: title, Done: false, Tag: tag}
+	todo := Todo{Title: title, Done: false, Tag: tag, Memo: memo}
 
-	parentnums, err := parseTodoNum(parent)
-	todos, err = appendTodo(todos, todo, parentnums)
+	parentnumlist, err := parseTodoNum(parentnum)
+	todos, err = appendTodo(todos, todo, parentnumlist)
 
 	return todoWrite("/var/tmp/todo.json", todos)
 }
 
 func listTodoAction(c *cli.Context) error {
-	var todos []Todo
-
 	todos, err := todoRead("/var/tmp/todo.json")
 	if err != nil {
 		return err
@@ -134,6 +139,25 @@ func listTodoAction(c *cli.Context) error {
 	return nil
 }
 
+func tagTodoAction(c *cli.Context) error {
+	todos, err := todoRead("/var/tmp/todo.json")
+	if err != nil {
+		return fmt.Errorf("failed to read jsonfile: %v", err)
+	}
+
+	if c.Bool("all") {
+		tags := mapset.NewSet()
+		displayAllTags(todos, tags)
+	} else if tag := c.Args().First(); tag != "" {
+		displayTagTodo(todos, tag)
+	} else {
+		cli.ShowCommandHelp(c, "list")
+		return fmt.Errorf("Failed to parse options")
+	}
+
+	return nil
+}
+
 func doneTodoAction(c *cli.Context) error {
 	var todos []Todo
 
@@ -143,7 +167,7 @@ func doneTodoAction(c *cli.Context) error {
 
 	todos, err := todoRead("/var/tmp/todo.json")
 	if err != nil {
-		return fmt.Errorf("Failed to read jsonfile: %v")
+		return fmt.Errorf("failed to read jsonfile: %v", err)
 	}
 
 	todonum := c.Args().First()
@@ -154,28 +178,20 @@ func doneTodoAction(c *cli.Context) error {
 	}
 
 	if err := todoWrite("/var/tmp/todo.json", todos); err != nil {
-		return err
+		return fmt.Errorf("Failed to write jsonfile: %v", err)
 	}
 
 	return nil
 }
 
-func tagTodoAction(c *cli.Context) error {
-	var todos []Todo
-
+func cleanTodoAction(c *cli.Context) error {
 	todos, err := todoRead("/var/tmp/todo.json")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read jsonfile: %v", err)
 	}
-
-	if c.Bool("all") {
-		var tags = mapset.NewSet()
-		displayAllTags(todos, tags)
-	} else if tag := c.Args().First(); tag != "" {
-		displayTagTodo(todos, tag)
-	} else {
-		cli.ShowCommandHelp(c, "list")
-		return fmt.Errorf("Failed to parse options")
+	todos, err = cleanAllTodos(todos)
+	if err := todoWrite("/var/tmp/todo.json", todos); err != nil {
+		return fmt.Errorf("Failed to write jsonfile: %v", err)
 	}
 
 	return nil
@@ -216,16 +232,16 @@ func todoRead(path string) ([]Todo, error) {
 	}
 }
 
-func appendTodo(todos []Todo, todo Todo, todonum []int) ([]Todo, error) {
-	if len(todonum) == 0 {
+func appendTodo(todos []Todo, todo Todo, todonumlist []int) ([]Todo, error) {
+	if len(todonumlist) == 0 {
 		return append(todos, todo), nil
 	}
-	if len(todonum) == 1 {
-		todos[todonum[0]].Children = append(todos[todonum[0]].Children, todo)
+	if len(todonumlist) == 1 {
+		todos[todonumlist[0]].Children = append(todos[todonumlist[0]].Children, todo)
 		return todos, nil
 	} else {
-		todos_children, _ := appendTodo(todos[todonum[0]].Children, todo, todonum[1:])
-		todos[todonum[0]].Children = todos_children
+		todochildren, _ := appendTodo(todos[todonumlist[0]].Children, todo, todonumlist[1:])
+		todos[todonumlist[0]].Children = todochildren
 		return todos, nil
 	}
 }
@@ -235,7 +251,7 @@ func displayTodo(todos []Todo, tab string) {
 		if todo.Done {
 			continue
 		}
-		fmt.Print(tab, todo_mark)
+		fmt.Print(tab, todoMark)
 		fmt.Printf("%v: %v: %v (%v)\n", id, todo.Title, todo.Date, todo.Tag)
 		if todo.Children != nil {
 			displayTodo(todo.Children, tab+" ")
@@ -246,9 +262,9 @@ func displayTodo(todos []Todo, tab string) {
 func displayAllTodo(todos []Todo, tab string) {
 	for id, todo := range todos {
 		if todo.Done {
-			fmt.Print(tab, todo_done_mark)
+			fmt.Print(tab, todoDoneMark)
 		} else {
-			fmt.Print(tab, todo_mark)
+			fmt.Print(tab, todoMark)
 		}
 		fmt.Printf("%v: %v: %v (%v)\n", id, todo.Title, todo.Date, todo.Tag)
 		if todo.Children != nil {
@@ -257,13 +273,13 @@ func displayAllTodo(todos []Todo, tab string) {
 	}
 }
 
-func doneTodo(todos []Todo, todonum []int) ([]Todo, error) {
-	if len(todonum) == 1 {
-		todos[todonum[0]].Done = true
+func doneTodo(todos []Todo, todonumlist []int) ([]Todo, error) {
+	if len(todonumlist) == 1 {
+		todos[todonumlist[0]].Done = true
 		return todos, nil
 	} else {
-		todos_children, _ := doneTodo(todos[todonum[0]].Children, todonum[1:])
-		todos[todonum[0]].Children = todos_children
+		todochildren, _ := doneTodo(todos[todonumlist[0]].Children, todonumlist[1:])
+		todos[todonumlist[0]].Children = todochildren
 		return todos, nil
 	}
 }
@@ -289,4 +305,25 @@ func displayAllTags(todos []Todo, tags mapset.Set) {
 			displayAllTags(todo.Children, tags)
 		}
 	}
+}
+
+func cleanAllTodos(todos []Todo) ([]Todo, error) {
+	for id, todo := range todos {
+		var todos_n []Todo
+		if todo.Done == true {
+			todos_n = deleteTodos(todos, id)
+			return todos_n, nil
+		}
+		if todo.Children != nil {
+			todos[id].Children, _ = cleanAllTodos(todos[id].Children)
+		}
+	}
+	return todos, nil
+}
+
+func deleteTodos(todos []Todo, todonum int) []Todo {
+	todos = append(todos[:todonum], todos[todonum+1:]...)
+	n := make([]Todo, len(todos))
+	copy(n, todos)
+	return n
 }
