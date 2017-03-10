@@ -67,7 +67,7 @@ func Run(args []string) int {
 		{
 			Name:    "tags",
 			Aliases: []string{"t"},
-			Usage:   "list todo",
+			Usage:   "list tags",
 			Action:  tagTodoAction,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
