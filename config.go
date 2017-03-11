@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -39,6 +41,21 @@ func (cfg *config) load() error {
 	gtdfile := filepath.Join(os.Getenv("HOME"), "gtd.json")
 	cfg.GtdFile = gtdfile
 	f, err := os.Create(configfile)
-	// if file not exists in ~/.config/gtd/config.toml, write f with cfg
 	return toml.NewEncoder(f).Encode(cfg)
+}
+
+func (cfg *config) runcmd(command string, files ...string) error {
+	var args []string
+	for _, file := range files {
+		args = append(args, fmt.Sprintf("%q", file))
+	}
+	cmdargs := strings.Join(args, " ")
+	command += " " + cmdargs
+
+	var cmd *exec.Cmd
+	cmd = exec.Command("sh", "-c", command)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
 }
