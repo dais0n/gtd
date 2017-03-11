@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -87,6 +88,12 @@ func Run(args []string) int {
 			Aliases: []string{"c"},
 			Usage:   "clean done todo",
 			Action:  cleanTodoAction,
+		},
+		{
+			Name:    "setting",
+			Aliases: []string{"s"},
+			Usage:   "edit config file",
+			Action:  settingTodoAction,
 		},
 	}
 	app.Run(os.Args)
@@ -195,6 +202,18 @@ func cleanTodoAction(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func settingTodoAction(c *cli.Context) error {
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return fmt.Errorf("falid to load configfile: %v", err)
+	}
+	dir := os.Getenv("HOME")
+	dir = filepath.Join(dir, ".config", "gtd")
+	file := filepath.Join(dir, "config.toml")
+	return cfg.runcmd(cfg.Editor, file)
 }
 
 // parse "1.1.0" to [1,1,0]
