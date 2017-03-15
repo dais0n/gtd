@@ -145,13 +145,14 @@ func doneTodo(todos []Todo, todonumlist []int) ([]Todo, error) {
 	}
 }
 
-func displayTagTodo(todos []Todo, tag string) {
+func displayTagTodo(todos []Todo, tag string, todoid string) {
 	for id, todo := range todos {
 		if todo.Tag == tag {
-			fmt.Printf("%v: %v: %v (%v)\n", id, todo.Title, todo.Date, todo.Tag)
+			fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
 		}
 		if todo.Children != nil {
-			displayTagTodo(todo.Children, tag)
+			parentid := todoid + strconv.Itoa(id) + "."
+			displayTagTodo(todo.Children, tag, parentid)
 		}
 	}
 }

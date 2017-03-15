@@ -178,7 +178,7 @@ func tagTodoAction(c *cli.Context) error {
 		tags := mapset.NewSet()
 		displayAllTags(todos.Todos, tags)
 	} else if tag := c.Args().First(); tag != "" {
-		displayTagTodo(todos.Todos, tag)
+		displayTagTodo(todos.Todos, tag, "")
 	} else {
 		cli.ShowCommandHelp(c, "list")
 		return fmt.Errorf("Failed to parse options")
