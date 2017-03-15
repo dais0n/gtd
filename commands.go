@@ -27,7 +27,7 @@ func Run(args []string) int {
 	app.Commands = []cli.Command{
 		{
 			Name:    "add",
-			Aliases: []string{"n"},
+			Aliases: []string{"a"},
 			Action:  addTodoAction,
 			Usage:   "add todo",
 			Flags: []cli.Flag{
