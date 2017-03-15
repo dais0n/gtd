@@ -1,4 +1,9 @@
 # gtd
+gtd = GoToDo
+
+gtd is simple todo list tool on CLI, written in go. 
+
+## Demo
 
 ## Usage
 ```
@@ -9,13 +14,9 @@ USAGE:
    gtd [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.1
-
-AUTHOR:
-   Takuya Omura <t.omura8383@gmail.com>
-
+   0.1.0
 COMMANDS:
-     add, n      add todo
+     add, a      add todo
      list, l     list todo
      tags, t     list tags
      done, d     done todo
