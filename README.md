@@ -1,7 +1,7 @@
 # gtd
 gtd = GoToDo
 
-gtd is simple todo list tool on CLI, written in go. 
+gtd is simple todo list tool on CLI, written in go
 
 ## Demo
 
@@ -30,5 +30,16 @@ GLOBAL OPTIONS:
 ```
 
 ## Installation
+```
+go get -u github.com/dais0n/gtd/cmd/gtd
+```
 
 ## Configuration
+run ``` gtd setting```. this config file is made by gtd command in ${HOME}/.config/gtd/config.toml
+
+```
+gtdfile = "/path/to/gtd.json" # this file is todo data file. Default is in ${HOME}/gtd.json
+outputdir = "/path/to/output" # this folder is output dir added file by gtd output command
+filtercmd = ""
+editor = "vim" # this editor is used by open memo file and config file
+```
