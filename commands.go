@@ -158,7 +158,7 @@ func listTodoAction(c *cli.Context) error {
 		displayAllTodo(todos.Todos, "", "")
 		return nil
 	}
-	displayTodo(todos.Todos, "")
+	displayTodo(todos.Todos, "", "")
 	return nil
 }
 

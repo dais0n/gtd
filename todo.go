@@ -99,15 +99,16 @@ func appendTodo(todos []Todo, todo Todo, todonumlist []int) ([]Todo, error) {
 	}
 }
 
-func displayTodo(todos []Todo, tab string) {
+func displayTodo(todos []Todo, tab string, todoid string) {
 	for id, todo := range todos {
 		if todo.Done {
 			continue
 		}
 		fmt.Print(tab, todoMark)
-		fmt.Printf("%v: %v: %v (%v)\n", id, todo.Title, todo.Date, todo.Tag)
+		fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
 		if todo.Children != nil {
-			displayTodo(todo.Children, tab+" ")
+			parentid := todoid + strconv.Itoa(id) + "."
+			displayTodo(todo.Children, tab+" ", parentid)
 		}
 	}
 }
