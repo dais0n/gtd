@@ -155,7 +155,7 @@ func listTodoAction(c *cli.Context) error {
 	fmt.Println("\u2705  YOUR TO DO LIST")
 
 	if c.Bool("all") {
-		displayAllTodo(todos.Todos, "")
+		displayAllTodo(todos.Todos, "", "")
 		return nil
 	}
 	displayTodo(todos.Todos, "")

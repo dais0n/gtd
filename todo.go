@@ -13,7 +13,7 @@ import (
 
 const (
 	todoMark     = "\u2610 "
-	todoDoneMark = "\u2611 "
+	todoDoneMark = "\u2713 "
 )
 
 type Todos struct {
@@ -112,16 +112,17 @@ func displayTodo(todos []Todo, tab string) {
 	}
 }
 
-func displayAllTodo(todos []Todo, tab string) {
+func displayAllTodo(todos []Todo, tab string, todoid string) {
 	for id, todo := range todos {
 		if todo.Done {
 			fmt.Print(tab, todoDoneMark)
 		} else {
 			fmt.Print(tab, todoMark)
 		}
-		fmt.Printf("%v: %v: %v (%v)\n", id, todo.Title, todo.Date, todo.Tag)
+		fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
 		if todo.Children != nil {
-			displayAllTodo(todo.Children, tab+" ")
+			parentid := todoid + strconv.Itoa(id) + "."
+			displayAllTodo(todo.Children, tab+" ", parentid)
 		}
 	}
 }
