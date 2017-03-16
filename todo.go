@@ -120,7 +120,11 @@ func displayAllTodo(todos []Todo, tab string, todoid string) {
 		} else {
 			fmt.Print(tab, todoMark)
 		}
-		fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
+		if todo.Tag != "" {
+			fmt.Printf("%v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
+		} else {
+			fmt.Printf("%v: %v\n", todoid+strconv.Itoa(id), todo.Title)
+		}
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
 			displayAllTodo(todo.Children, tab+" ", parentid)
@@ -133,7 +137,7 @@ func doneTodo(todos []Todo, todonumlist []int) ([]Todo, error) {
 		return todos, fmt.Errorf("Faild to access index")
 	}
 	if len(todonumlist) == 1 {
-		todos[todonumlist[0]].Done = true
+		todos[todonumlist[0]].Done = !todos[todonumlist[0]].Done
 		return todos, nil
 	} else {
 		todochildren, err := doneTodo(todos[todonumlist[0]].Children, todonumlist[1:])
@@ -173,7 +177,7 @@ func cleanAllTodos(todos []Todo) ([]Todo, error) {
 	for id, todo := range todos {
 		var todos_n []Todo
 		if todo.Done == true {
-			todos_n = deleteTodos(todos, id)
+			todos_n = removeTodo(todos, id)
 			return todos_n, nil
 		}
 		if todo.Children != nil {
@@ -183,7 +187,24 @@ func cleanAllTodos(todos []Todo) ([]Todo, error) {
 	return todos, nil
 }
 
-func deleteTodos(todos []Todo, todonum int) []Todo {
+func deleteTodos(todos []Todo, todonumlist []int) ([]Todo, error) {
+	if len(todos) == 0 || len(todos)-1 < todonumlist[0] {
+		return todos, fmt.Errorf("Faild to access index")
+	}
+	if len(todonumlist) == 1 {
+		todos = removeTodo(todos, todonumlist[0])
+		return todos, nil
+	} else {
+		todochildren, err := doneTodo(todos[todonumlist[0]].Children, todonumlist[1:])
+		if err != nil {
+			return todos, err
+		}
+		todos[todonumlist[0]].Children = todochildren
+		return todos, nil
+	}
+}
+
+func removeTodo(todos []Todo, todonum int) []Todo {
 	todos = append(todos[:todonum], todos[todonum+1:]...)
 	n := make([]Todo, len(todos))
 	copy(n, todos)

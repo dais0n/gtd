@@ -78,6 +78,12 @@ func Run(args []string) int {
 			Action:  cleanTodoAction,
 		},
 		{
+			Name:    "delete",
+			Aliases: []string{"d"},
+			Usage:   "delete todo",
+			Action:  deleteTodoAction,
+		},
+		{
 			Name:    "setting",
 			Aliases: []string{"s"},
 			Usage:   "edit config file",
@@ -230,6 +236,29 @@ func cleanTodoAction(c *cli.Context) error {
 		return fmt.Errorf("failed to read jsonfile: %v", err)
 	}
 	todolist, err := cleanAllTodos(todos.Todos)
+	todos.SetTodos(todolist)
+
+	return todos.marshallJson(cfg.GtdFile)
+}
+
+func deleteTodoAction(c *cli.Context) error {
+	var cfg config
+	var todos Todos
+	err := cfg.load()
+	if err != nil {
+		return fmt.Errorf("falid to load configfile: %v", err)
+	}
+	err = todos.UnmarshallJson(cfg.GtdFile)
+
+	if err != nil {
+		return fmt.Errorf("failed to read jsonfile: %v", err)
+	}
+	todonum := c.Args().First()
+	todonumlist, err := parseTodoNum(todonum)
+	if err != nil {
+		return fmt.Errorf("Failed to parse number: %v", err)
+	}
+	todolist, err := deleteTodos(todos.Todos, todonumlist)
 	todos.SetTodos(todolist)
 
 	return todos.marshallJson(cfg.GtdFile)
