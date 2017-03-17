@@ -105,7 +105,11 @@ func displayTodo(todos []Todo, tab string, todoid string) {
 			continue
 		}
 		fmt.Print(tab, todoMark)
-		fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
+		if todo.Tag != "" {
+			fmt.Printf("%v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
+		} else {
+			fmt.Printf("%v: %v\n", todoid+strconv.Itoa(id), todo.Title)
+		}
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
 			displayTodo(todo.Children, tab+" ", parentid)
