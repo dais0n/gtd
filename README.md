@@ -21,6 +21,7 @@ COMMANDS:
      tags, t     list tags
      done, d     done todo
      clean, c    clean done todo
+     delete, d   delete todo
      setting, s  edit config file
      help, h     Shows a list of commands or help for one command
 
