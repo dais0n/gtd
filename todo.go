@@ -14,6 +14,7 @@ import (
 const (
 	todoMark     = "\u2610 "
 	todoDoneMark = "\u2713 "
+	memoMark     = " \u270F"
 )
 
 type Todos struct {
@@ -106,10 +107,14 @@ func displayTodo(todos []Todo, tab string, todoid string) {
 		}
 		fmt.Print(tab, todoMark)
 		if todo.Tag != "" {
-			fmt.Printf("%v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
+			fmt.Printf("%v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
 		} else {
-			fmt.Printf("%v: %v\n", todoid+strconv.Itoa(id), todo.Title)
+			fmt.Printf("%v: %v", todoid+strconv.Itoa(id), todo.Title)
 		}
+		if todo.Memo != "" {
+			fmt.Print(memoMark)
+		}
+		fmt.Println()
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
 			displayTodo(todo.Children, tab+" ", parentid)
@@ -125,10 +130,14 @@ func displayAllTodo(todos []Todo, tab string, todoid string) {
 			fmt.Print(tab, todoMark)
 		}
 		if todo.Tag != "" {
-			fmt.Printf("%v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
+			fmt.Printf("%v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
 		} else {
-			fmt.Printf("%v: %v\n", todoid+strconv.Itoa(id), todo.Title)
+			fmt.Printf("%v: %v", todoid+strconv.Itoa(id), todo.Title)
 		}
+		if todo.Memo != "" {
+			fmt.Print(memoMark)
+		}
+		fmt.Println()
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
 			displayAllTodo(todo.Children, tab+" ", parentid)
@@ -156,7 +165,11 @@ func doneTodo(todos []Todo, todonumlist []int) ([]Todo, error) {
 func displayTagTodo(todos []Todo, tag string, todoid string) {
 	for id, todo := range todos {
 		if todo.Tag == tag {
-			fmt.Printf("%v: %v: %v (%v)\n", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
+			fmt.Printf("%v: %v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
+			if todo.Memo != "" {
+				fmt.Print(memoMark)
+			}
+			fmt.Println()
 		}
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
@@ -205,6 +218,17 @@ func deleteTodos(todos []Todo, todonumlist []int) ([]Todo, error) {
 		}
 		todos[todonumlist[0]].Children = todochildren
 		return todos, nil
+	}
+}
+
+func searchTodo(todos []Todo, todonumlist []int) (*Todo, error) {
+	if len(todos) == 0 || len(todos)-1 < todonumlist[0] {
+		return nil, fmt.Errorf("Faild to access index")
+	}
+	if len(todonumlist) == 1 {
+		return &todos[todonumlist[0]], nil
+	} else {
+		return searchTodo(todos[todonumlist[0]].Children, todonumlist[1:])
 	}
 }
 

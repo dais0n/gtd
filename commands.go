@@ -1,9 +1,11 @@
 package gtd
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/urfave/cli"
@@ -15,7 +17,7 @@ const (
 	ExitCodeFileError            // 2
 )
 
-var Version = "0.1.0"
+var Version = "0.1.1"
 
 func Run(args []string) int {
 	app := cli.NewApp()
@@ -37,7 +39,11 @@ func Run(args []string) int {
 				},
 				cli.StringFlag{
 					Name:  "tag, t",
-					Usage: "add `TAG` to todo (ex: gtd add -t memo task)",
+					Usage: "add `TAG` to todo (ex: gtd add -t life task)",
+				},
+				cli.BoolFlag{
+					Name:  "memo, m",
+					Usage: "add `MEMO` to todo (ex: gtd add -m task)",
 				},
 			},
 		},
@@ -89,6 +95,12 @@ func Run(args []string) int {
 			Usage:   "edit config file",
 			Action:  settingTodoAction,
 		},
+		{
+			Name:    "memo",
+			Aliases: []string{"m"},
+			Usage:   "edit memo file associated with task (ex, gtd memo 4)",
+			Action:  memoTodoAction,
+		},
 	}
 	return msg(app.Run(os.Args))
 }
@@ -99,6 +111,13 @@ func msg(err error) int {
 		return ExitCodeError
 	}
 	return ExitCodeOK
+}
+
+func ask(prompt string) bool {
+	fmt.Print(prompt, ": ")
+	var stdin string
+	fmt.Scan(&stdin)
+	return stdin == "y" || stdin == "Y"
 }
 
 func addTodoAction(c *cli.Context) error {
@@ -123,10 +142,33 @@ func addTodoAction(c *cli.Context) error {
 		title = c.Args().First()
 		tag = c.String("tag")
 		parentnum = c.String("parent")
-		memo = c.String("memo")
 	} else {
 		cli.ShowCommandHelp(c, "add")
 		return fmt.Errorf("Failed to parse options")
+	}
+
+	if c.Bool("memo") {
+		var buf bytes.Buffer
+		var stdin string
+		if cfg.MemoDir == "" {
+			return fmt.Errorf("please setting MemoDir ")
+		}
+		if cfg.FilterCmd == "" {
+			return fmt.Errorf("please setting FilterCmd (peco/fzf)")
+		}
+
+		if ask("existing file? (y/n)") {
+			cmd := fmt.Sprintf("find %s -type f | %s", cfg.MemoDir, cfg.FilterCmd)
+			cfg.filtercmd(cmd, &buf)
+		} else {
+			fmt.Println("new file name: ")
+			fmt.Scan(&stdin)
+			stdin = "/" + stdin
+			cmd := fmt.Sprintf("find %s -type d | %s", cfg.MemoDir, cfg.FilterCmd)
+			cfg.filtercmd(cmd, &buf)
+		}
+		cmdresult := buf.String()
+		memo = strings.TrimRight(cmdresult, "\n") + stdin
 	}
 
 	todo := Todo{
@@ -274,4 +316,29 @@ func settingTodoAction(c *cli.Context) error {
 	dir = filepath.Join(dir, ".config", "gtd")
 	file := filepath.Join(dir, "config.toml")
 	return cfg.runcmd(cfg.Editor, file)
+}
+
+func memoTodoAction(c *cli.Context) error {
+	var cfg config
+	var todos Todos
+	err := cfg.load()
+	if err != nil {
+		return fmt.Errorf("falid to load configfile: %v", err)
+	}
+
+	err = todos.UnmarshallJson(cfg.GtdFile)
+	if err != nil {
+		return fmt.Errorf("failed to read jsonfile: %v", err)
+	}
+
+	todonum := c.Args().First()
+	todonumlist, err := parseTodoNum(todonum)
+	if err != nil {
+		return fmt.Errorf("Failed to parse number: %v", err)
+	}
+	todolist, err := searchTodo(todos.Todos, todonumlist)
+	if err != nil {
+		return fmt.Errorf("Failed to access todo: %v", err)
+	}
+	return cfg.runcmd(cfg.Editor, todolist.Memo)
 }

@@ -2,6 +2,7 @@ package gtd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,6 +41,7 @@ func (cfg *config) load() error {
 	cfg.Editor = "vi"
 	gtdfile := filepath.Join(os.Getenv("HOME"), "gtd.json")
 	cfg.GtdFile = gtdfile
+	cfg.MemoDir = os.Getenv("HOME")
 	f, err := os.Create(configfile)
 	return toml.NewEncoder(f).Encode(cfg)
 }
@@ -57,5 +59,14 @@ func (cfg *config) runcmd(command string, files ...string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+	return cmd.Run()
+}
+
+func (cfg *config) filtercmd(command string, w io.Writer) error {
+	var cmd *exec.Cmd
+	cmd = exec.Command("sh", "-c", command)
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = w
 	return cmd.Run()
 }
