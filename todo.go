@@ -212,7 +212,7 @@ func deleteTodos(todos []Todo, todonumlist []int) ([]Todo, error) {
 		todos = removeTodo(todos, todonumlist[0])
 		return todos, nil
 	} else {
-		todochildren, err := doneTodo(todos[todonumlist[0]].Children, todonumlist[1:])
+		todochildren, err := deleteTodos(todos[todonumlist[0]].Children, todonumlist[1:])
 		if err != nil {
 			return todos, err
 		}
