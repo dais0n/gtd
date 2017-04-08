@@ -80,6 +80,17 @@ func parseTodoNum(todonum string) ([]int, error) {
 	return todonums, nil
 }
 
+func printTodo(todo Todo, id string) {
+	if todo.Tag != "" {
+		fmt.Printf("%v: %v (%v)", id, todo.Title, todo.Tag)
+	} else {
+		fmt.Printf("%v: %v", id, todo.Title)
+	}
+	if todo.Memo != "" {
+		fmt.Print(memoMark)
+	}
+}
+
 func appendTodo(todos []Todo, todo Todo, todonumlist []int) ([]Todo, error) {
 	if len(todonumlist) == 0 {
 		return append(todos, todo), nil
@@ -106,11 +117,7 @@ func displayTodo(todos []Todo, tab string, todoid string) {
 			continue
 		}
 		fmt.Print(tab, todoMark)
-		if todo.Tag != "" {
-			fmt.Printf("%v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
-		} else {
-			fmt.Printf("%v: %v", todoid+strconv.Itoa(id), todo.Title)
-		}
+		printTodo(todo, todoid+strconv.Itoa(id))
 		if todo.Memo != "" {
 			fmt.Print(memoMark)
 		}
@@ -129,14 +136,7 @@ func displayAllTodo(todos []Todo, tab string, todoid string) {
 		} else {
 			fmt.Print(tab, todoMark)
 		}
-		if todo.Tag != "" {
-			fmt.Printf("%v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Tag)
-		} else {
-			fmt.Printf("%v: %v", todoid+strconv.Itoa(id), todo.Title)
-		}
-		if todo.Memo != "" {
-			fmt.Print(memoMark)
-		}
+		printTodo(todo, todoid+strconv.Itoa(id))
 		fmt.Println()
 		if todo.Children != nil {
 			parentid := todoid + strconv.Itoa(id) + "."
@@ -165,10 +165,7 @@ func doneTodo(todos []Todo, todonumlist []int) ([]Todo, error) {
 func displayTagTodo(todos []Todo, tag string, todoid string) {
 	for id, todo := range todos {
 		if todo.Tag == tag {
-			fmt.Printf("%v: %v: %v (%v)", todoid+strconv.Itoa(id), todo.Title, todo.Date, todo.Tag)
-			if todo.Memo != "" {
-				fmt.Print(memoMark)
-			}
+			printTodo(todo, todoid+strconv.Itoa(id))
 			fmt.Println()
 		}
 		if todo.Children != nil {
