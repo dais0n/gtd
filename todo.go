@@ -7,14 +7,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	mapset "github.com/deckarep/golang-set"
+	color "github.com/fatih/color"
 )
 
 const (
 	todoMark     = "\u2610 "
 	todoDoneMark = "\u2713 "
 	memoMark     = " \u270F"
+	timeFormat   = "2006-01-02"
 )
 
 type Todos struct {
@@ -81,14 +84,27 @@ func parseTodoNum(todonum string) ([]int, error) {
 }
 
 func printTodo(todo Todo, id string) {
+	var printcolor = color.New(color.FgWhite)
+	if checkTodoDate(todo) {
+		printcolor = color.New(color.FgRed)
+	}
 	if todo.Tag != "" {
-		fmt.Printf("%v: %v (%v)", id, todo.Title, todo.Tag)
+		printcolor.Printf("%v: %v (%v) %v", id, todo.Title, todo.Tag, todo.Date)
 	} else {
-		fmt.Printf("%v: %v", id, todo.Title)
+		printcolor.Printf("%v: %v %v", id, todo.Title, todo.Date)
 	}
 	if todo.Memo != "" {
 		fmt.Print(memoMark)
 	}
+}
+
+func checkTodoDate(todo Todo) bool {
+	if todo.Date == "" {
+		return false
+	}
+	tododate, _ := time.Parse(dateLayout, todo.Date)
+	weekago := time.Now().AddDate(0, 0, -7)
+	return tododate.Before(weekago)
 }
 
 func appendTodo(todos []Todo, todo Todo, todonumlist []int) ([]Todo, error) {

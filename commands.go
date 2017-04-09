@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/urfave/cli"
@@ -15,6 +16,7 @@ const (
 	ExitCodeOK        int = iota // 0
 	ExitCodeError                // 1
 	ExitCodeFileError            // 2
+	timeFormat        = "2006-01-02"
 )
 
 var Version = "0.1.1"
@@ -170,12 +172,13 @@ func addTodoAction(c *cli.Context) error {
 		cmdresult := buf.String()
 		memo = strings.TrimRight(cmdresult, "\n") + stdin
 	}
-
+	var date = time.Now().Format(TimeFormat)
 	todo := Todo{
 		Title: title,
 		Done:  false,
 		Tag:   tag,
 		Memo:  memo,
+		Date:  date,
 	}
 
 	parentnumlist, err := parseTodoNum(parentnum)
