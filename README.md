@@ -46,7 +46,6 @@ run ``` gtd setting```. this config file is made by gtd command in ${HOME}/.conf
 
 ```
 gtdfile = "/path/to/gtd.json" # this file is todo data file. Default is in ${HOME}/gtd.json
-outputdir = "/path/to/output" # this folder is output dir added file by gtd output command
 filtercmd = "fzf" # this command is used when you type gtd add -m cmd
 editor = "vim" # this editor is used by open memo file and config file
 memodir = "~" # search taget below this directory when you add memo
