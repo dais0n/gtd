@@ -17,7 +17,6 @@ const (
 	todoMark     = "\u2610 "
 	todoDoneMark = "\u2713 "
 	memoMark     = " \u270F"
-	timeFormat   = "2006-01-02"
 )
 
 type Todos struct {
@@ -102,7 +101,7 @@ func checkTodoDate(todo Todo) bool {
 	if todo.Date == "" {
 		return false
 	}
-	tododate, _ := time.Parse(dateLayout, todo.Date)
+	tododate, _ := time.Parse(timeFormat, todo.Date)
 	weekago := time.Now().AddDate(0, 0, -7)
 	return tododate.Before(weekago)
 }

@@ -172,7 +172,7 @@ func addTodoAction(c *cli.Context) error {
 		cmdresult := buf.String()
 		memo = strings.TrimRight(cmdresult, "\n") + stdin
 	}
-	var date = time.Now().Format(TimeFormat)
+	var date = time.Now().Format(timeFormat)
 	todo := Todo{
 		Title: title,
 		Done:  false,
