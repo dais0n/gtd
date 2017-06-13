@@ -50,3 +50,6 @@ filtercmd = "fzf" # this command is used when you type gtd add -m cmd
 editor = "vim" # this editor is used by open memo file and config file
 memodir = "~" # search taget below this directory when you add memo
 ```
+
+## License
+MIT
